@@ -1,0 +1,368 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart';
+import 'package:data_connection_checker/data_connection_checker.dart';
+import 'package:navette_application/Service/Enveloppe.dart';
+import 'package:navette_application/Service/Package.dart';
+import 'Hub.dart';
+import 'dart:convert';
+import 'User.dart';
+
+class Services {
+  static const String nomServeur = '51.91.56.9:2021';
+//pour recuperation des user donnée -Login
+  static Future<User> userLogin(String email, String mdp) async {
+    String url = "http://$nomServeur/api/mob2/api.php?action=login";
+
+    try {
+      final reponse =
+          await get(url, headers: <String, String>{"email": email, "mdp": mdp});
+      if (reponse.statusCode == 200) {
+        final reponseJson = jsonDecode(reponse.body);
+        if (reponseJson.containsKey("error")) {
+          return User(id: "-1"); //user n'existe pas
+        }
+        return User.fromJson(reponseJson);
+      } else {
+        throw Exception("Error");
+      }
+    } catch (e) {
+      return User(id: "-2"); //erreur dans le serveur pendant login user
+    }
+  }
+
+//por test de connexion
+  static Future<bool> isConnected() async {
+    bool connected = await DataConnectionChecker().hasConnection;
+
+    return connected;
+  }
+
+  static showNoConnectionSnackBar(GlobalKey<ScaffoldState> _scaffoldKey) {
+    final snackBar = SnackBar(
+      backgroundColor: Colors.grey[100].withOpacity(0.95),
+      content: Text(
+        'Vérifier votre connexion internet!',
+        style: TextStyle(
+          color: Colors.red,
+        ),
+      ),
+      action: SnackBarAction(
+        textColor: Colors.indigo,
+        label: 'Ok',
+        onPressed: () {},
+      ),
+    );
+    _scaffoldKey.currentState.showSnackBar(snackBar);
+  }
+/*
+  static Future<List<Navette>> getNavettes() async {
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        List<Navette> list = parseNavette(response.body);
+        return list;
+      } else {
+        throw Exception("Error");
+      }
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+ 
+  static List<Navette> parseNavette(String responseBody) {
+    final parsed = json.decode(responseBody).cast<Map<String, dynamic>>();
+    return parsed.map<Navette>((json) => Navette.fromJson(json)).toList();
+  }
+
+  */
+
+//  la liste des hubs
+  static List<Hub> getListHubs() {
+    return [
+      Hub(id: '10', nomVille: 'Alger'),
+      Hub(id: '12', nomVille: 'Oran'),
+      Hub(id: '14', nomVille: 'Tlemcen'),
+      Hub(id: '15', nomVille: 'Setif'),
+      Hub(id: '16', nomVille: 'Anaba'),
+    ];
+  }
+
+  static Future<List<Package>> getPacakgeARemettre(
+      String email, String mdp) async {
+    try {
+      String url =
+          "http://$nomServeur/api/mob2/api.php?action=navettes_EN_COURS";
+      final response = await get(url, headers: <String, String>{
+        'email': email,
+        'mdp': mdp,
+      });
+      if (response.statusCode == 200) {
+        List<Package> list = parsePackage(response.body);
+        return list;
+      } else {
+        throw Exception("Error");
+      }
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static Future<List<Package>> getPacakgeARecuperer(
+      String email, String mdp) async {
+    try {
+      String url =
+          "http://$nomServeur/api/mob2/api.php?action=navettes_EN_ATTENTE";
+      final response = await get(url, headers: <String, String>{
+        'email': email,
+        'mdp': mdp,
+      });
+      if (response.statusCode == 200) {
+        List<Package> list = parsePackage(response.body);
+        return list;
+      } else {
+        throw Exception("Error");
+      }
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static Future<String> remiseBienConfirmer(
+      String email, String mdp, String ids) async {
+    try {
+      var headers = {
+        'email': email,
+        'mdp': mdp,
+        'Content-Type': 'application/json'
+      };
+      var request = Request('GET',
+          Uri.parse('http://$nomServeur/api/mob2/api.php?action=return'));
+      request.body = '''[$ids]''';
+      request.headers.addAll(headers);
+
+      StreamedResponse response = await request.send();
+
+      if (response.statusCode == 200) {
+        return await response.stream.bytesToString();
+      } else {
+        return response.reasonPhrase;
+      }
+    } catch (e) {
+      return 'Serveur planté';
+    }
+  }
+
+  static Future<String> recuperationBienConfirmer(
+      String email, String mdp, String ids) async {
+    try {
+      var headers = {
+        'email': email,
+        'mdp': mdp,
+        'Content-Type': 'application/json'
+      };
+      var request = Request('GET',
+          Uri.parse('http://$nomServeur/api/mob2/api.php?action=departure'));
+      request.body = '''[$ids]''';
+      request.headers.addAll(headers);
+
+      StreamedResponse response = await request.send();
+
+      if (response.statusCode == 200) {
+        return await response.stream.bytesToString();
+      } else {
+        return response.reasonPhrase;
+      }
+    } catch (e) {
+      return 'Serveur planté';
+    }
+  }
+
+  static List<Package> parsePackage(String responseBody) {
+    final parsed = json.decode(responseBody).cast<Map<String, dynamic>>();
+    return parsed.map<Package>((json) => Package.fromJson(json)).toList();
+  }
+/*
+  static void test() {
+    String packageSelectione = '';
+    List<Package> list = [
+      Package(id: "1223", selected: true),
+      Package(id: "2345", selected: false),
+      Package(id: "432", selected: false),
+      Package(id: "4232", selected: true),
+    ];
+    list.forEach((element) {
+      if (element.selected)
+        packageSelectione = packageSelectione + "${element.id},";
+    });
+
+    print(
+        '''[${packageSelectione.substring(0, packageSelectione.length - 1)}]''');
+  }*/
+
+  static Future<bool> envoiCodeCofirmation(
+      {String moyen,
+      String email,
+      String mdp,
+      String tel,
+      String emailreceveur,
+      String ids}) async {
+    String url =
+        "http://$nomServeur/api/mob2/api.php?action=codeTransfertCaisse&moyen=sms";
+
+    var headers = {
+      'email': 'bilel@er.com', //email
+      'mdp': '0597', //mdp
+      'tel': '0798116341', //tel
+      'emailreceveur': 'gy_mouaci@esi.dz' //emailreceveur
+    };
+    try {
+      var request = MultipartRequest('POST', Uri.parse(url));
+      request.fields.addAll({'ids': '13,14' /* ids*/});
+
+      request.headers.addAll(headers);
+
+      StreamedResponse response = await request.send();
+
+      if (response.statusCode == 200) {
+        String sResponse = await response.stream.bytesToString();
+        if (sResponse.contains("error"))
+          return false;
+        else if (sResponse.contains("false"))
+          return false;
+        else
+          return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static Future<bool> confirmeCode(
+      {String email, String mdp, String codeconfirmation, String ids}) async {
+    String url =
+        "http://$nomServeur/api/mob2/api.php?action=confirmertransfertcaisse";
+
+    var headers = {
+      'email': 'bilel@er.com', //email
+      'mdp': '0597', //mdp
+      'codeconfirmation': codeconfirmation,
+    };
+
+    try {
+      var request = MultipartRequest('POST', Uri.parse(url));
+      request.fields.addAll({'ids': '13,14' /*ids*/});
+
+      request.headers.addAll(headers);
+
+      StreamedResponse response = await request.send();
+
+      if (response.statusCode == 200) {
+        String sResponse = await response.stream.bytesToString();
+        if (sResponse.contains("error"))
+          return false;
+        else if (sResponse.contains("false"))
+          return false;
+        else
+          return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static Future<List<Enveloppe>> getEnveloppeARemettre(
+      String email, String mdp, String id) async {
+    String url =
+        "http://$nomServeur/api/mob2/api.php?action=getTransfertNavette";
+    try {
+      var headers = {
+        'email': 'bilel@er.com', //email
+        'mdp': '0597', //mdp
+        'etat': '3',
+        'acteur': '385494' //id
+      };
+      var request = Request('GET', Uri.parse(url));
+
+      request.headers.addAll(headers);
+
+      StreamedResponse response = await request.send();
+
+      if (response.statusCode == 200) {
+        String sResponse = await response.stream.bytesToString();
+        List<Enveloppe> list = parseEnveloppe(sResponse);
+        return list;
+      } else {
+        throw Exception(response.reasonPhrase);
+      }
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static Future<List<Enveloppe>> getEnveloppeARecuperer(
+      String email, String mdp, String id) async {
+    String url =
+        "http://$nomServeur/api/mob2/api.php?action=getTransfertNavette";
+    try {
+      var headers = {
+        'email': 'bilel@er.com', //email
+        'mdp': '0597', //mdp
+        'etat': '1',
+        'acteur': '385494' //id
+      };
+      var request = Request('GET', Uri.parse(url));
+
+      request.headers.addAll(headers);
+
+      StreamedResponse response = await request.send();
+
+      if (response.statusCode == 200) {
+        String sResponse = await response.stream.bytesToString();
+        List<Enveloppe> list = parseEnveloppe(sResponse);
+        return list;
+      } else {
+        throw Exception(response.reasonPhrase);
+      }
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static List<Enveloppe> parseEnveloppe(String responseBody) {
+    final parsed = json.decode(responseBody).cast<Map<String, dynamic>>();
+    return parsed.map<Enveloppe>((json) => Enveloppe.fromJson(json)).toList();
+  }
+
+  static Future<String> setStateEnveloppe(
+      String email, String mdp, String ids, String id) async {
+    String url =
+        "http://$nomServeur/api/mob2/api.php?=action=setTransfertActeurEtat";
+    try {
+      var headers = {
+        'email': 'bilel@er.com',//email
+        'mdp': '0597',//mdp
+        'id': '15',//ids
+        'etat': '3',//state
+        'acteur': '385494'//id
+      };
+      var request = Request('GET', Uri.parse(url));
+
+      request.headers.addAll(headers);
+
+      StreamedResponse response = await request.send();
+
+      if (response.statusCode == 200) {
+        return (await response.stream.bytesToString());
+      } else {
+        return response.reasonPhrase ;
+      }
+    } catch (e) {
+      return "Serveur Planté";
+    }
+  }
+}
