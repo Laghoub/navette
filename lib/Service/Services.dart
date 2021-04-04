@@ -211,14 +211,15 @@ class Services {
         "http://$nomServeur/api/mob2/api.php?action=codeTransfertCaisse&moyen=sms";
 
     var headers = {
-      'email': 'bilel@er.com', //email
-      'mdp': '0597', //mdp
-      'tel': '0798116341', //tel
-      'emailreceveur': 'gy_mouaci@esi.dz' //emailreceveur
+      'email': email, //'bilel@er.com'
+      'mdp':mdp , //'0597'
+      'tel': '0790479950', //tel
+      'emailreceveur': 'nada.g@easy-relay.com' //emailreceveur
     };
+    print(ids);
     try {
       var request = MultipartRequest('POST', Uri.parse(url));
-      request.fields.addAll({'ids': '13,14' /* ids*/});
+      request.fields.addAll({'ids': ids /*'13,14' */});
 
       request.headers.addAll(headers);
 
@@ -246,14 +247,14 @@ class Services {
         "http://$nomServeur/api/mob2/api.php?action=confirmertransfertcaisse";
 
     var headers = {
-      'email': 'bilel@er.com', //email
-      'mdp': '0597', //mdp
+      'email': email, //'bilel@er.com'
+      'mdp': mdp, //'0597'
       'codeconfirmation': codeconfirmation,
     };
-
+    print(ids);
     try {
       var request = MultipartRequest('POST', Uri.parse(url));
-      request.fields.addAll({'ids': '13,14' /*ids*/});
+      request.fields.addAll({'ids': ids /*'13,14'*/});
 
       request.headers.addAll(headers);
 
@@ -281,8 +282,8 @@ class Services {
         "http://$nomServeur/api/mob2/api.php?action=getTransfertNavette";
     try {
       var headers = {
-        'email': 'bilel@er.com', //email
-        'mdp': '0597', //mdp
+        'email': email, //'bilel@er.com'
+        'mdp': mdp, //'0597'
         'etat': '3',
         'acteur': '385494' //id
       };
@@ -310,8 +311,8 @@ class Services {
         "http://$nomServeur/api/mob2/api.php?action=getTransfertNavette";
     try {
       var headers = {
-        'email': 'bilel@er.com', //email
-        'mdp': '0597', //mdp
+        'email': email, //'bilel@er.com'
+        'mdp':mdp , //'0597'
         'etat': '1',
         'acteur': '385494' //id
       };
@@ -341,12 +342,12 @@ class Services {
   static Future<String> setStateEnveloppe(
       String email, String mdp, String ids, String id) async {
     String url =
-        "http://$nomServeur/api/mob2/api.php?=action=setTransfertActeurEtat";
+        "http://$nomServeur/api/mob2/api.php?action=setTransfertActeurEtat";
     try {
       var headers = {
-        'email': 'bilel@er.com',//email
-        'mdp': '0597',//mdp
-        'id': '15',//ids
+        'email': email,//'bilel@er.com'
+        'mdp':mdp ,//'0597'
+        'id': ids,//ids
         'etat': '3',//state
         'acteur': '385494'//id
       };
@@ -355,7 +356,6 @@ class Services {
       request.headers.addAll(headers);
 
       StreamedResponse response = await request.send();
-
       if (response.statusCode == 200) {
         return (await response.stream.bytesToString());
       } else {

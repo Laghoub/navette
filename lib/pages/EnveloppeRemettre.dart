@@ -45,32 +45,8 @@ class _EnveloppeRemettreState extends State<EnveloppeRemettre> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final List<Hub> listHubs = Services.getListHubs();
 
-  List<Manager> listReceveurs = [
-    Manager(
-        id: '1',
-        nom: "Youcef",
-        prenom: "Mouaci",
-        mail: "gy_mouaci@esi.dz",
-        telephone: "0798116341"),
-    Manager(
-        id: '2',
-        nom: "Zaki",
-        prenom: "Mentouri",
-        mail: "zaki.m@easy-relay.com",
-        telephone: "0560310597"),
-    Manager(
-        id: '4',
-        nom: "Mohamed",
-        prenom: "Mahamdi",
-        mail: "developpeur",
-        telephone: "0557555555"),
-    Manager(
-        id: '5',
-        nom: "Nada",
-        prenom: "guenoun",
-        mail: "manger",
-        telephone: "0555555855"),
-  ];
+  Manager receveur ;
+  List<Manager> listReceveurs = [] ;
   List<Enveloppe> enveloppesRemetreList = [];
   List<Enveloppe> filteredEnveloppesRemetreList;
 
@@ -301,9 +277,10 @@ class _EnveloppeRemettreState extends State<EnveloppeRemettre> {
                                                               : "email",
                                                       email: email,
                                                       mdp: mdp,
-                                                      tel: "",//managerSelectione().telephone,
-                                                      emailreceveur:
-                                                          "",//managerSelectione().mail,
+                                                      tel:
+                                                   receveur.telephone,
+                                              emailreceveur:
+                                                  receveur.mail,
                                                       ids:
                                                           "${idEnveloppesRemi()}");
                                               if (sended == null) {
@@ -441,6 +418,7 @@ class _EnveloppeRemettreState extends State<EnveloppeRemettre> {
                     } else {
                       if (validationState == 0) {
                         //Confirmation de la selection des enveloppes
+                        receveur = managerSelectione() ;
                         await showDialog(
                           context: context,
                           builder: (BuildContext context) {
@@ -460,7 +438,17 @@ class _EnveloppeRemettreState extends State<EnveloppeRemettre> {
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                         )),
-                                    TextSpan(text: ' enveloppe(s) !'),
+                                    TextSpan(text: ' enveloppe(s) !\n'),
+                                    
+                                    TextSpan(
+                                        text: receveur == null? '':
+                                            'Le receveur : '),
+                                    TextSpan(
+                                        text:receveur == null? '':
+                                            '${receveur.nom}'+" "+"${receveur.prenom}",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        )),
                                   ])),
                                   actions: [
                                     FlatButton(
@@ -483,9 +471,9 @@ class _EnveloppeRemettreState extends State<EnveloppeRemettre> {
                                               email: email,
                                               mdp: mdp,
                                               tel:
-                                                   "",//managerSelectione().telephone, normalement le telephone existe danz le premiere enveloppe
+                                                   receveur.telephone,
                                               emailreceveur:
-                                                  "",//managerSelectione().mail,
+                                                  receveur.mail,
                                               ids: "${idEnveloppesRemi()}");
                                         }),
                                     FlatButton(
@@ -502,9 +490,9 @@ class _EnveloppeRemettreState extends State<EnveloppeRemettre> {
                                               email: email,
                                               mdp: mdp,
                                               tel:
-                                                  "",//managerSelectione().telephone,
+                                                   receveur.telephone,
                                               emailreceveur:
-                                                  "",//managerSelectione().mail,
+                                                  receveur.mail,
                                               ids: "${idEnveloppesRemi()}");
                                         }),
                                     FlatButton(
@@ -655,10 +643,12 @@ class _EnveloppeRemettreState extends State<EnveloppeRemettre> {
   }
 
   Manager managerSelectione() {
-    return listReceveurs.firstWhere((element) => element.selected == true,
+    Enveloppe env= filteredEnveloppesRemetreList.firstWhere((element) => element.selected == true,
         orElse: () {
       return null;
     });
+    if(env == null)  return null ;
+    else return Manager(nom: env.nomRecepteur, prenom: env.prenomRecepteur,telephone: env.telRecepteur,mail: env.mailRecepteur);
   }
 }
 
