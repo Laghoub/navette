@@ -43,12 +43,13 @@ class _EnveloppeRemettreState extends State<EnveloppeRemettre> {
   User user;
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  final List<Hub> listHubs = Services.getListHubs();
+  //final List<Hub> listHubs = Services.getListHubs();
 
-  Manager receveur ;
-  List<Manager> listReceveurs = [] ;
+  Manager receveur;
+  List<Manager> listReceveurs = [];
   List<Enveloppe> enveloppesRemetreList = [];
   List<Enveloppe> filteredEnveloppesRemetreList;
+  List<Hub> listHubs = [];
 
   void initState() {
     super.initState();
@@ -60,6 +61,13 @@ class _EnveloppeRemettreState extends State<EnveloppeRemettre> {
     email = data['email'] as String;
     user = data['user'] as User;
     mdp = data['mdp'] as String;
+    Services.getListHubs(email, mdp).then((value){
+      setState(() {
+        if (value != null) {
+          listHubs = value;
+        }
+      });
+    });
     if (validationState == -1)
       Services.getEnveloppeARemettre(email, mdp, user.id).then((value) {
         setState(() {
@@ -106,7 +114,7 @@ class _EnveloppeRemettreState extends State<EnveloppeRemettre> {
         /*Barre de Top contient un titre et bouton de filtrage */
         appBar: AppBar(
           automaticallyImplyLeading: validationState == 0 ? true : false,
-          brightness: Brightness.light,
+          brightness: Brightness.dark,
           backgroundColor: Colors.purple[900],
           title: Text("Remettre les Enveloppes"),
           centerTitle: true,
@@ -226,134 +234,138 @@ class _EnveloppeRemettreState extends State<EnveloppeRemettre> {
                           : validationState == 0
                               ? ListeEnveloppeFiltrer(
                                   liste: filteredEnveloppesRemetreList)
-                              
-                                  : Column(
-                                      children: [
-                                        SmsCodeConfirmationWid(),
-                                        validationState == 2
-                                            ? Container(
-                                                margin: EdgeInsets.symmetric(
-                                                    horizontal: 25),
-                                                child: LinearProgressIndicator(
-                                                    minHeight: 2,
-                                                    semanticsLabel: "Patientez",
-                                                    //strokeWidth: 2.0,
-                                                    backgroundColor: Colors
-                                                        .purple[900]
-                                                        .withOpacity(0.9),
-                                                    valueColor:
-                                                        AlwaysStoppedAnimation<
-                                                                Color>(
-                                                            Colors.blue)),
-                                              )
-                                            : SizedBox(
-                                                height: 5,
-                                              ),
-                                        SizedBox(height: 5),
-                                        validationState == 2
-                                            ? Center(
-                                                child: Text(
-                                                "Patientez, Svp!",
-                                                style: TextStyle(
-                                                  color: Colors.black87,
-                                                ),
-                                              ))
-                                            : SizedBox(height: 5),
-                                        SizedBox(height: 10),
-                                        Text("Le code n'a pas été reçu?",
-                                            style: TextStyle(
-                                              color: Colors.red[700],
-                                            )),
-                                        SizedBox(height: 0),
-                                        TextButton(
-                                            onPressed: () async {
-                                              //Ici on utilisant le type de code on renvoi le code vers le receveur
-                                              bool sended = await Services
-                                                  .envoiCodeCofirmation(
-                                                      moyen:
-                                                          typeCodeConfirmation ==
-                                                                  0
-                                                              ? "sms"
-                                                              : "email",
-                                                      email: email,
-                                                      mdp: mdp,
-                                                      tel:
-                                                   receveur.telephone,
-                                              emailreceveur:
-                                                  receveur.mail,
-                                                      ids:
-                                                          "${idEnveloppesRemi()}");
-                                              if (sended == null) {
-                                                showPanneServerDialog(context);
-                                              }
-                                            },
+                              : Column(
+                                  children: [
+                                    SmsCodeConfirmationWid(),
+                                    validationState == 2
+                                        ? Container(
+                                            margin: EdgeInsets.symmetric(
+                                                horizontal: 25),
+                                            child: LinearProgressIndicator(
+                                                minHeight: 2,
+                                                semanticsLabel: "Patientez",
+                                                //strokeWidth: 2.0,
+                                                backgroundColor: Colors
+                                                    .purple[900]
+                                                    .withOpacity(0.9),
+                                                valueColor:
+                                                    AlwaysStoppedAnimation<
+                                                        Color>(Colors.blue)),
+                                          )
+                                        : SizedBox(
+                                            height: 5,
+                                          ),
+                                    SizedBox(height: 5),
+                                    validationState == 2
+                                        ? Center(
                                             child: Text(
-                                                "Envoyer un nouveau code",
-                                                style: TextStyle(
-                                                  fontSize: 20,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: Colors.purple[900]
-                                                      .withOpacity(0.95),
-                                                )))
-                                      ],
-                                    ),
+                                            "Patientez, Svp!",
+                                            style: TextStyle(
+                                              color: Colors.black87,
+                                            ),
+                                          ))
+                                        : SizedBox(height: 5),
+                                    SizedBox(height: 10),
+                                    Text("Le code n'a pas été reçu?",
+                                        style: TextStyle(
+                                          color: Colors.red[700],
+                                        )),
+                                    SizedBox(height: 0),
+                                    TextButton(
+                                        onPressed: () async {
+                                          //Ici on utilisant le type de code on renvoi le code vers le receveur
+                                          bool sended = await Services
+                                              .envoiCodeCofirmation(
+                                                  moyen:
+                                                      typeCodeConfirmation == 0
+                                                          ? "sms"
+                                                          : "email",
+                                                  email: email,
+                                                  mdp: mdp,
+                                                  tel: receveur.telephone,
+                                                  emailreceveur: receveur.mail,
+                                                  ids: "${idEnveloppesRemi()}");
+                                          if (sended == null) {
+                                            showPanneServerDialog(context);
+                                          }
+                                        },
+                                        child: Text("Envoyer un nouveau code",
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.w700,
+                                              color: Colors.purple[900]
+                                                  .withOpacity(0.95),
+                                            )))
+                                  ],
+                                ),
             ),
           ],
         ),
         floatingActionButton: MaterialButton(
-          onPressed: validationState ==
-                  2 //encours de la validation (teste de code)
-              ? null
-              : //Saisi du code de verification
-              () async {
-                  //var connected = await Services.isConnected();
-                  if (Home.connected) {
-                    _scaffoldKey.currentState.removeCurrentSnackBar();
-                    var nonSelectione = nbNonSelectionne();
-                    if (validationState == 1) {
-                      SmsCodeConfirmationWid.nonValidated = false;
-                      if (SmsCodeConfirmationWid.keyform.currentState
-                          .validate()) {
-                        setState(() {
-                          validationState++;
-                        });
-                        bool confirmed = await Services.confirmeCode(
-                          email: email,
-                          mdp: mdp,
-                          codeconfirmation:
-                              SmsCodeConfirmationWid.smsCodeController.text,
-                          ids: "${idEnveloppesRemi()}",
-                        );
-                        if (confirmed == null) {
-                          showPanneServerDialog(context);
+          onPressed: validationState == -1? null :
+           enveloppesRemetreList.length != 0
+              ? validationState == 2 //encours de la validation (teste de code)
+                  ? null
+                  : //Saisi du code de verification
+                  () async {
+                      //var connected = await Services.isConnected();
+                      if (Home.connected) {
+                        _scaffoldKey.currentState.removeCurrentSnackBar();
+                        var nonSelectione = nbNonSelectionne();
+                        if (validationState == 1) {
                           SmsCodeConfirmationWid.nonValidated = false;
-                          setState(() {
-                            validationState--;
-                          });
-                        } else {
-                          SmsCodeConfirmationWid.nonValidated = !confirmed;
-                          setState(() {
-                            if (!SmsCodeConfirmationWid.keyform.currentState
-                                .validate())
-                              validationState--;
-                            else {
-                              validationState--;
-                              showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return StatefulBuilder(
-                                        builder: (context, setState) {
-                                      return WillPopScope(
-                                          onWillPop: () => Future.value(false),
-                                          child: AlertDialog(
-                                            title: Text("Terminaison"),
-                                            content: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                CircleAvatar(
-                                                  backgroundColor:
-                                                      ShowStepState.valide,
-                                                  child: Stack(
+                          if (SmsCodeConfirmationWid.keyform.currentState
+                              .validate()) {
+                            setState(() {
+                              validationState++;
+                            });
+                            bool confirmed = await Services.confirmeCode(
+                              email: email,
+                              mdp: mdp,
+                              codeconfirmation:
+                                  SmsCodeConfirmationWid.smsCodeController.text,
+                              ids: "${idEnveloppesRemi()}",
+                            );
+                            if (confirmed == null) {
+                              showPanneServerDialog(context);
+                              SmsCodeConfirmationWid.nonValidated = false;
+                              setState(() {
+                                validationState--;
+                              });
+                            } else {
+                              SmsCodeConfirmationWid.nonValidated = !confirmed;
+                              setState(() {
+                                if (!SmsCodeConfirmationWid.keyform.currentState
+                                    .validate())
+                                  validationState--;
+                                else {
+                                  validationState--;
+                                  showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return StatefulBuilder(
+                                            builder: (context, setState) {
+                                          return WillPopScope(
+                                              onWillPop: () =>
+                                                  Future.value(false),
+                                              child: AlertDialog(
+                                                title: Text("Terminaison"),
+                                                content: Column(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    CircleAvatar(
+                                                      backgroundColor:
+                                                          ShowStepState.valide,
+                                                      child: Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(8.0),
+                                                          child: Image.asset(
+                                                            "assets/Caisse - Remise.png",
+                                                            semanticLabel:
+                                                                "Caisse Remise",
+                                                          )), /*Stack(
                                                     children: [
                                                       Icon(
                                                         Icons.money,
@@ -368,159 +380,187 @@ class _EnveloppeRemettreState extends State<EnveloppeRemettre> {
                                                             size: 35,
                                                           ))
                                                     ],
+                                                  ),*/
+                                                    ),
+                                                    SizedBox(height: 10),
+                                                    Text.rich(
+                                                      TextSpan(children: [
+                                                        TextSpan(
+                                                            text:
+                                                                "Enveloppe à remettre\n",
+                                                            style: TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            )),
+                                                        TextSpan(
+                                                            text:
+                                                                "Etape Terminée",
+                                                            style: TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              color:
+                                                                  Colors.green,
+                                                            ))
+                                                      ]),
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                    ),
+                                                  ],
+                                                ),
+                                                actions: [
+                                                  FlatButton(
+                                                    child: Text("Continuer"),
+                                                    onPressed: () {
+                                                      Navigator.of(context)
+                                                          .pop();
+                                                      Navigator
+                                                          .pushReplacementNamed(
+                                                              context,
+                                                              '/home/enveloppeRecuperer',
+                                                              arguments: {
+                                                            'user': user,
+                                                            'email': email,
+                                                            'mdp': mdp
+                                                          });
+                                                    },
                                                   ),
-                                                ),
-                                                SizedBox(height: 10),
-                                                Text.rich(
-                                                  TextSpan(children: [
-                                                    TextSpan(
-                                                        text:
-                                                            "Enveloppe à remettre\n",
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                        )),
-                                                    TextSpan(
-                                                        text: "Etape Terminée",
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          color: Colors.green,
-                                                        ))
-                                                  ]),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                              ],
-                                            ),
-                                            actions: [
-                                              FlatButton(
-                                                child: Text("Continuer"),
-                                                onPressed: () {
-                                                  Navigator.of(context).pop();
-                                                  Navigator.pushReplacementNamed(
-                                                      context,
-                                                      '/home/enveloppeRecuperer',
-                                                      arguments: {
-                                                        'user': user,
-                                                        'email': email,
-                                                        'mdp': mdp
-                                                      });
-                                                },
-                                              ),
-                                            ],
-                                          ));
-                                    });
-                                  });
+                                                ],
+                                              ));
+                                        });
+                                      });
+                                }
+                              });
                             }
-                          });
-                        }
-                      }
-                    } else {
-                      if (validationState == 0) {
-                        //Confirmation de la selection des enveloppes
-                        receveur = managerSelectione() ;
-                        await showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return StatefulBuilder(
-                                builder: (context, setState) {
-                              return WillPopScope(
-                                onWillPop: () => Future.value(false),
-                                child: AlertDialog(
-                                  title: Text("Confirmation"),
-                                  content: Text.rich(TextSpan(children: [
-                                    TextSpan(
-                                        text:
-                                            'Vous confirmez la remise de(s) '),
-                                    TextSpan(
-                                        text:
-                                            '${filteredEnveloppesRemetreList.length - nonSelectione}',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                    TextSpan(text: ' enveloppe(s) !\n'),
-                                    
-                                    TextSpan(
-                                        text: receveur == null? '':
-                                            'Le receveur : '),
-                                    TextSpan(
-                                        text:receveur == null? '':
-                                            '${receveur.nom}'+" "+"${receveur.prenom}",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                  ])),
-                                  actions: [
-                                    FlatButton(
-                                      child: Text("Annuler"),
-                                      onPressed: () {
-                                        Navigator.of(context).pop();
-                                      },
+                          }
+                        } else {
+                          if (validationState == 0) {
+                            //Confirmation de la selection des enveloppes
+                            receveur = managerSelectione();
+                            await showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return StatefulBuilder(
+                                    builder: (context, setState) {
+                                  return WillPopScope(
+                                    onWillPop: () => Future.value(false),
+                                    child: AlertDialog(
+                                      title: Text("Confirmation"),
+                                      content: Text.rich(TextSpan(children: [
+                                        TextSpan(
+                                            text:
+                                                'Vous confirmez la remise de(s) '),
+                                        TextSpan(
+                                            text:
+                                                '${filteredEnveloppesRemetreList.length - nonSelectione}',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                            )),
+                                        TextSpan(text: ' enveloppe(s) !\n'),
+                                        TextSpan(
+                                            text: receveur == null
+                                                ? ''
+                                                : 'Le receveur : '),
+                                        TextSpan(
+                                            text: receveur == null
+                                                ? ''
+                                                : '${receveur.nom}' +
+                                                    " " +
+                                                    "${receveur.prenom}",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                            )),
+                                      ])),
+                                      actions: [
+                                        FlatButton(
+                                          child: Text("Annuler"),
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                        ),
+                                        FlatButton(
+                                            child: Text("SMS"),
+                                            onPressed:
+                                                filteredEnveloppesRemetreList
+                                                                .length -
+                                                            nonSelectione ==
+                                                        0
+                                                    ? null
+                                                    : () {
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                        validationState++;
+                                                        typeCodeConfirmation =
+                                                            0;
+                                                          
+                                                        Services.envoiCodeCofirmation(
+                                                            moyen: "sms",
+                                                            email: email,
+                                                            mdp: mdp,
+                                                            tel: receveur
+                                                                .telephone,
+                                                            emailreceveur:
+                                                                receveur.mail,
+                                                            ids:
+                                                                "${idEnveloppesRemi()}");
+                                                      }),
+                                        FlatButton(
+                                            child: Text("Email"),
+                                            onPressed:
+                                                filteredEnveloppesRemetreList
+                                                                .length -
+                                                            nonSelectione ==
+                                                        0
+                                                    ? null
+                                                    : () {
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                        validationState++;
+                                                        typeCodeConfirmation =
+                                                            1;
+                                                        Services.envoiCodeCofirmation(
+                                                            moyen: "email",
+                                                            email: email,
+                                                            mdp: mdp,
+                                                            tel: receveur
+                                                                .telephone,
+                                                            emailreceveur:
+                                                                receveur.mail,
+                                                            ids:
+                                                                "${idEnveloppesRemi()}");
+                                                      }),
+                                        FlatButton(
+                                            child: Text("Continuer"),
+                                            onPressed:
+                                                filteredEnveloppesRemetreList
+                                                                .length -
+                                                            nonSelectione !=
+                                                        0
+                                                    ? null
+                                                    : () {
+                                                        Navigator.of(context)
+                                                            .pop();
+
+                                                        Navigator
+                                                            .pushReplacementNamed(
+                                                                context,
+                                                                '/home/enveloppeRecuperer',
+                                                                arguments: {
+                                                              'user': user,
+                                                              'email': email,
+                                                              'mdp': mdp
+                                                            });
+                                                      }),
+                                      ],
                                     ),
-                                    FlatButton(
-                                        child: Text("SMS"),
-                                        onPressed:filteredEnveloppesRemetreList
-                                                      .length -
-                                                  nonSelectione == 0? null
-                                                 :  () {
-                                          Navigator.of(context).pop();
-                                          validationState++;
-                                          typeCodeConfirmation = 0;
-                                          Services.envoiCodeCofirmation(
-                                              moyen: "sms",
-                                              email: email,
-                                              mdp: mdp,
-                                              tel:
-                                                   receveur.telephone,
-                                              emailreceveur:
-                                                  receveur.mail,
-                                              ids: "${idEnveloppesRemi()}");
-                                        }),
-                                    FlatButton(
-                                        child: Text("Email"),
-                                        onPressed: filteredEnveloppesRemetreList
-                                                      .length -
-                                                  nonSelectione == 0? null
-                                                 :  () {
-                                          Navigator.of(context).pop();
-                                          validationState++;
-                                          typeCodeConfirmation = 1;
-                                          Services.envoiCodeCofirmation(
-                                              moyen: "email",
-                                              email: email,
-                                              mdp: mdp,
-                                              tel:
-                                                   receveur.telephone,
-                                              emailreceveur:
-                                                  receveur.mail,
-                                              ids: "${idEnveloppesRemi()}");
-                                        }),
-                                    FlatButton(
-                                        child: Text("Continuer"),
-                                        onPressed: filteredEnveloppesRemetreList
-                                                      .length -
-                                                  nonSelectione != 0? null
-                                                 : () {
-                                          Navigator.of(context).pop();
-                                          
-                                            Navigator.pushReplacementNamed(
-                                                context,
-                                                '/home/enveloppeRecuperer',
-                                                arguments: {
-                                                  'user': user,
-                                                  'email': email,
-                                                  'mdp': mdp
-                                                });
-                                        }),
-                                  ],
-                                ),
-                              );
-                            });
-                          },
-                        );
-                      } else {
-                        //POUR cnfirmer le choix de receveur et choix de la methode d'envoie SMS/Email
-                        /*await showDialog(
+                                  );
+                                });
+                              },
+                            );
+                          } else {
+                            //POUR cnfirmer le choix de receveur et choix de la methode d'envoie SMS/Email
+                            /*await showDialog(
                           context: context,
                           builder: (BuildContext context) {
                             return StatefulBuilder(
@@ -593,16 +633,21 @@ class _EnveloppeRemettreState extends State<EnveloppeRemettre> {
                             });
                           },
                         );*/
+                          }
+                        }
+                        setState(() {});
+                      } else {
+                        _scaffoldKey.currentState.removeCurrentSnackBar();
+                        Services.showNoConnectionSnackBar(_scaffoldKey);
                       }
                     }
-                    setState(() {});
-                  } else {
-                    _scaffoldKey.currentState.removeCurrentSnackBar();
-                    Services.showNoConnectionSnackBar(_scaffoldKey);
-                  }
+              : () {
+                  Navigator.pushReplacementNamed(
+                      context, '/home/enveloppeRecuperer',
+                      arguments: {'user': user, 'email': email, 'mdp': mdp});
                 },
           child: Text(
-            "Confirmer",
+            enveloppesRemetreList.length != 0 ? "Confirmer" : "Continuer",
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w300,
@@ -643,12 +688,19 @@ class _EnveloppeRemettreState extends State<EnveloppeRemettre> {
   }
 
   Manager managerSelectione() {
-    Enveloppe env= filteredEnveloppesRemetreList.firstWhere((element) => element.selected == true,
-        orElse: () {
+    Enveloppe env = filteredEnveloppesRemetreList
+        .firstWhere((element) => element.selected == true, orElse: () {
       return null;
     });
-    if(env == null)  return null ;
-    else return Manager(nom: env.nomRecepteur, prenom: env.prenomRecepteur,telephone: env.telRecepteur,mail: env.mailRecepteur);
+    print(env);
+    if (env == null)
+      return null;
+    else
+      return Manager(
+          nom: env.nomRecepteur,
+          prenom: env.prenomRecepteur,
+          telephone: env.telRecepteur,
+          mail: env.mailRecepteur);
   }
 }
 

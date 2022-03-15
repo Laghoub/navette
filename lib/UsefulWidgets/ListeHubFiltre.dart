@@ -10,6 +10,7 @@ class ListeHubFiltre extends StatefulWidget {
 }
 
 class _ListeHubFiltreState extends State<ListeHubFiltre> {
+
   @override
   Widget build(BuildContext context) {
     return Expanded(
@@ -48,7 +49,7 @@ class _ListeHubFiltreState extends State<ListeHubFiltre> {
                   ),
                 ),
               ),
-              title: Text(widget.listHubs[index].nomVille.toUpperCase()),
+              title: Text(widget.listHubs[index].name.toUpperCase()),
               subtitle: Text('ID: ' + widget.listHubs[index].id.toString()),
               trailing:
                   /*(selectingmode)

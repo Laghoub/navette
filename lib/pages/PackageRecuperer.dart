@@ -24,8 +24,7 @@ class _PackageRecupererState extends State<PackageRecuperer> {
   Attente attente = Attente(milliseconds: 3000);
   int validationState = -1;
   String hubSelectione = "";
-    String validationMessage = "" ;
-
+  String validationMessage = "";
 
   String email;
   String mdp;
@@ -33,14 +32,17 @@ class _PackageRecupererState extends State<PackageRecuperer> {
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  final List<Hub> listHubs = Services.getListHubs();
+  //final List<Hub> listHubs = Services.getListHubs();
 
   List<Package> packagesRecupererList = [];
   List<Package> filteredPackagesRecupererList;
+  List<Hub> listHubs = [];
 
   void initState() {
     super.initState();
-    
+  }
+   String hubName(String id){
+    return listHubs.firstWhere((element) => element.id.compareTo(id)==0).name;
   }
 
   @override
@@ -49,38 +51,48 @@ class _PackageRecupererState extends State<PackageRecuperer> {
     email = data['email'] as String;
     user = data['user'] as User;
     mdp = data['mdp'] as String;
-    if(validationState==-1) Services.getPacakgeARecuperer(email,mdp).then((value) {
+    Services.getListHubs(email, mdp).then((value){
       setState(() {
         if (value != null) {
-          packagesRecupererList = value;
-          filteredPackagesRecupererList = packagesRecupererList;
-          validationState = 0;
-        } else
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return StatefulBuilder(builder: (context, setState) {
-                return WillPopScope(
-                  onWillPop: () => Future.value(false),
-                  child: AlertDialog(
-                    title: Text("Panne"),
-                    content: Text(
-                        "Une panne est survenue au niveau du serveur, Veuillez réessayer plus tard"),
-                    actions: [
-                      FlatButton(
-                          child: Text("Revenir à la page d'accueil"),
-                          onPressed: () {
-                            Navigator.popUntil(
-                                context, ModalRoute.withName('/home'));
-                          }),
-                    ],
-                  ),
-                );
-              });
-            },
-          );
+
+          listHubs = value;
+        }
       });
     });
+    if (validationState == -1)
+      Services.getPacakgeARecuperer(email, mdp).then((value) {
+        setState(() {
+          if (value != null) {
+            //print("cc");
+            packagesRecupererList = value;
+            filteredPackagesRecupererList = packagesRecupererList;
+            validationState = 0;
+          } else
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return StatefulBuilder(builder: (context, setState) {
+                  return WillPopScope(
+                    onWillPop: () => Future.value(false),
+                    child: AlertDialog(
+                      title: Text("Panne"),
+                      content: Text(
+                          "Une panne est survenue au niveau du serveur, Veuillez réessayer plus tard"),
+                      actions: [
+                        FlatButton(
+                            child: Text("Revenir à la page d'accueil"),
+                            onPressed: () {
+                              Navigator.popUntil(
+                                  context, ModalRoute.withName('/home'));
+                            }),
+                      ],
+                    ),
+                  );
+                });
+              },
+            );
+        });
+      });
 
     super.didChangeDependencies();
   }
@@ -93,7 +105,7 @@ class _PackageRecupererState extends State<PackageRecuperer> {
         key: _scaffoldKey,
         /*Barre de Top contient un titre et bouton de filtrage */
         appBar: AppBar(
-          brightness: Brightness.light,
+          brightness: Brightness.dark,
           backgroundColor: Colors.purple[900],
           title: Text("Recuperer les navettes"),
           centerTitle: true,
@@ -312,16 +324,16 @@ class _PackageRecupererState extends State<PackageRecuperer> {
                                       onTap: () {
                                         setState(() {
                                           //  if (selectingmode) {
-                                          if (filteredPackagesRecupererList[
+                                          /*if (filteredPackagesRecupererList[
                                                   index]
-                                              .selected)
-                                            filteredPackagesRecupererList[index]
-                                                    .selected =
-                                                !filteredPackagesRecupererList[
-                                                        index]
-                                                    .selected;
+                                              .selected)*/
+                                          filteredPackagesRecupererList[index]
+                                                  .selected =
+                                              !filteredPackagesRecupererList[
+                                                      index]
+                                                  .selected;
                                           //}
-                                        }); /**/
+                                        });
                                       },
                                       selected:
                                           filteredPackagesRecupererList[index]
@@ -346,10 +358,17 @@ class _PackageRecupererState extends State<PackageRecuperer> {
                                           filteredPackagesRecupererList[index]
                                               .id
                                               .toString()),
-                                      subtitle: Text(
-                                          filteredPackagesRecupererList[index]
-                                              .status
-                                              .toString()),
+                                      subtitle: Padding(padding:const EdgeInsets.only(right:30.0), 
+                                      child:Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                              filteredPackagesRecupererList[index]
+                                                  .status
+                                                  .toString()),
+                                          Text(hubName(filteredPackagesRecupererList[index].hubArrive)) ,
+                                        ],
+                                      ),),
                                       trailing:
                                           /*(selectingmode)
                                                     ? */
@@ -377,153 +396,211 @@ class _PackageRecupererState extends State<PackageRecuperer> {
           ],
         ),
         floatingActionButton: MaterialButton(
-          onPressed: () async {
-            //var connected = await Services.isConnected();
-            if (Home.connected) {
-              _scaffoldKey.currentState.removeCurrentSnackBar();
-              var nonSelectione = nbNonSelectionne();
-              setState(() {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return StatefulBuilder(builder: (context, setState) {
-                      return WillPopScope(
-                        onWillPop: () => Future.value(false),
-                        child: AlertDialog(
-                          title: Text("Confirmation"),
-                          content: validationState == 0
-                              ? Text.rich(TextSpan(children: [
-                                  TextSpan(
-                                      text:
-                                          'Vous confirmez la récupération de(s) '),
-                                  TextSpan(
-                                      text:
-                                          '${filteredPackagesRecupererList.length - nonSelectione}',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      )),
-                                  TextSpan(text: ' package(s) !'),
-                                ]))
-                              : validationState == 1
-                                  ? CircularProgressIndicator(
-                                      strokeWidth: 2.0,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                          Colors.blue))
-                                  :validationState == 2 ?  Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        CircleAvatar(
-                                          backgroundColor: ShowStepState.valide,
-                                          child: Icon(
+          onPressed:validationState == -1? null :
+           packagesRecupererList.length != 0
+              ? () async {
+                  //var connected = await Services.isConnected();
+                  if (Home.connected) {
+                    _scaffoldKey.currentState.removeCurrentSnackBar();
+                    var nonSelectione = nbNonSelectionne();
+                    setState(() {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return StatefulBuilder(builder: (context, setState) {
+                            return WillPopScope(
+                              onWillPop: () => Future.value(false),
+                              child: AlertDialog(
+                                title: Text("Confirmation"),
+                                content: validationState == 0
+                                    ? Text.rich(TextSpan(children: [
+                                        TextSpan(
+                                            text:
+                                                'Vous confirmez la récupération de(s) '),
+                                        TextSpan(
+                                            text:
+                                                '${filteredPackagesRecupererList.length - nonSelectione}',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                            )),
+                                        TextSpan(text: ' package(s) !'),
+                                      ]))
+                                    : validationState == 1
+                                        ? CircularProgressIndicator(
+                                            strokeWidth: 2.0,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                    Colors.blue))
+                                        : validationState == 2
+                                            ? Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  CircleAvatar(
+                                                    backgroundColor:
+                                                        ShowStepState.valide,
+                                                    child: Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              4.0),
+                                                      child: Image.asset(
+                                                        "assets/Navette Récupération.png",
+                                                        semanticLabel:
+                                                            "Navette récuperation",
+                                                      ), /*Icon(
                                             Icons.local_shipping_rounded,
                                             color: Colors.white,
-                                          ),
-                                        ),
-                                        SizedBox(height: 10),
-                                        Text.rich(
-                                            TextSpan(children: [
-                                              TextSpan(
-                                                  text:
-                                                      "Packages à récuperer\n",
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.w600,
-                                                  )),
-                                              TextSpan(
-                                                  text: "Etape Terminée",
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.w600,
-                                                    color: Colors.green,
-                                                  ))
-                                            ]),
-                                            textAlign: TextAlign.center),
-                                      ],
-                                    ) 
-                                    :Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        CircleAvatar(
-                                          backgroundColor: ShowStepState.nonValide,
-                                          child: Icon(
+                                          ),*/
+                                                    ),
+                                                  ),
+                                                  SizedBox(height: 10),
+                                                  Text.rich(
+                                                      TextSpan(children: [
+                                                        TextSpan(
+                                                            text:
+                                                                "Packages à récuperer\n",
+                                                            style: TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            )),
+                                                        TextSpan(
+                                                            text:
+                                                                "Etape Terminée",
+                                                            style: TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              color:
+                                                                  Colors.green,
+                                                            ))
+                                                      ]),
+                                                      textAlign:
+                                                          TextAlign.center),
+                                                ],
+                                              )
+                                            : Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  CircleAvatar(
+                                                    backgroundColor:
+                                                        ShowStepState.nonValide,
+                                                    child: Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              4.0),
+                                                      child: Image.asset(
+                                                        "assets/Navette Récupération.png",
+                                                        semanticLabel:
+                                                            "Navette récuperation",
+                                                      ), /* Icon(
                                             Icons.local_shipping_outlined,
                                             color: Colors.white,
-                                          ),
-                                        ),
-                                        SizedBox(height: 10),
-                                        Text.rich(
-                                          TextSpan(children: [
-                                            TextSpan(
-                                                text: "Packages à récuperer\n",
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.w600,
-                                                )),
-                                            TextSpan(
-                                                text: "Etape Echouée\n",
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Colors.red,
-                                                )),
-                                             TextSpan(
-                                                text: "Motif : "+validationMessage ,
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.w300,
-                                                  color: Colors.grey[800],
-                                                ))
-                                          ]),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ],
-                                    ),
-                          actions: [
-                            FlatButton(
-                              child: Text("Annuler"),
-                              onPressed: validationState == 0
-                                  ? () {
-                                      Navigator.of(context).pop();
-                                    }
-                                  : null,
-                            ),
-                            FlatButton(
-                              child: Text("Continuer"),
-                              onPressed: validationState == 0
-                                  ? () async {
-                                      setState(() {
-                                        validationState = 1;
-                                      });
-                                      if(filteredPackagesRecupererList.length - nonSelectione !=0){
-                                        validationMessage = await Services.recuperationBienConfirmer(email, mdp,idPackagesRecupere()) ;
-                                      
-                                         setState(() {
-                                          if(validationMessage.compareTo("1") == 0) validationState = 2;
-                                          else validationState = 3 ;
-                                        }) ;
-                                        attente.run(() {
-                                          Navigator.of(context).pop() ;
-                                          if(validationMessage.compareTo("1") == 0) Navigator.popUntil(context,
-                                              ModalRoute.withName('/home'));
-                                          else setState((){
-                                            validationState = 0 ;
-                                          })    ;
-                                        }); 
-                                      }  
-                                      else Navigator.popUntil(context,
-                                              ModalRoute.withName('/home'));
-                                    }
-                                  : null,
-                            ),
-                          ],
-                        ),
+                                          ),*/
+                                                    ),
+                                                  ),
+                                                  SizedBox(height: 10),
+                                                  Text.rich(
+                                                    TextSpan(children: [
+                                                      TextSpan(
+                                                          text:
+                                                              "Packages à récuperer\n",
+                                                          style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                          )),
+                                                      TextSpan(
+                                                          text:
+                                                              "Etape Echouée\n",
+                                                          style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                            color: Colors.red,
+                                                          )),
+                                                      TextSpan(
+                                                          text: "Motif : " +
+                                                              validationMessage,
+                                                          style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.w300,
+                                                            color: Colors
+                                                                .grey[800],
+                                                          ))
+                                                    ]),
+                                                    textAlign: TextAlign.center,
+                                                  ),
+                                                ],
+                                              ),
+                                actions: [
+                                  FlatButton(
+                                    child: Text("Annuler"),
+                                    onPressed: validationState == 0
+                                        ? () {
+                                            Navigator.of(context).pop();
+                                          }
+                                        : null,
+                                  ),
+                                  FlatButton(
+                                    child: Text("Continuer"),
+                                    onPressed: validationState == 0
+                                        ? () async {
+                                            setState(() {
+                                              validationState = 1;
+                                            });
+                                            if (filteredPackagesRecupererList
+                                                        .length -
+                                                    nonSelectione !=
+                                                0) {
+                                              validationMessage = await Services
+                                                  .recuperationBienConfirmer(
+                                                      email,
+                                                      mdp,
+                                                      idPackagesRecupere());
+
+                                              setState(() {
+                                                if (validationMessage
+                                                        .compareTo("1") ==
+                                                    0)
+                                                  validationState = 2;
+                                                else
+                                                  validationState = 3;
+                                              });
+                                              attente.run(() {
+                                                Navigator.of(context).pop();
+                                                if (validationMessage
+                                                        .compareTo("1") ==
+                                                    0)
+                                                  Navigator.popUntil(
+                                                      context,
+                                                      ModalRoute.withName(
+                                                          '/home'));
+                                                else
+                                                  setState(() {
+                                                    validationState = 0;
+                                                  });
+                                              });
+                                            } else
+                                              Navigator.popUntil(context,
+                                                  ModalRoute.withName('/home'));
+                                          }
+                                        : null,
+                                  ),
+                                ],
+                              ),
+                            );
+                          });
+                        },
                       );
                     });
-                  },
-                );
-              });
-            } else {
-              _scaffoldKey.currentState.removeCurrentSnackBar();
-              Services.showNoConnectionSnackBar(_scaffoldKey);
-            }
-          },
+                  } else {
+                    _scaffoldKey.currentState.removeCurrentSnackBar();
+                    Services.showNoConnectionSnackBar(_scaffoldKey);
+                  }
+                }
+              : () {
+                  Navigator.popUntil(context, ModalRoute.withName('/home'));
+                },
           child: Text(
-            "Confirmer",
+            packagesRecupererList.length != 0 ? "Confirmer" : "Continuer",
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w300,
@@ -551,14 +628,14 @@ class _PackageRecupererState extends State<PackageRecuperer> {
         .length;
   }
 
-  String idPackagesRecupere(){
-    String packageSelectione ='' ;
+  String idPackagesRecupere() {
+    String packageSelectione = '';
     filteredPackagesRecupererList.forEach((element) {
-                          if (element.selected)
-                            packageSelectione = packageSelectione + "${element.id},";
-                        });
-    
-    return packageSelectione.substring(0,packageSelectione.length-1) ;
+      if (element.selected)
+        packageSelectione = packageSelectione + "${element.id},";
+    });
+
+    return packageSelectione.substring(0, packageSelectione.length - 1);
   }
 
   int miseAJourScan(String barcode) {

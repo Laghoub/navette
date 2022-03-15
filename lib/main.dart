@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:navette_application/pages/EnvTest.dart';
 //import 'package:get/get.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'package:navette_application/pages/Home.dart';
@@ -14,8 +15,9 @@ void main() {
   kNotificationDuration = const Duration(milliseconds: 1500);
   return runApp(OverlaySupport(
       child: MaterialApp(
-      initialRoute: '/',
+      initialRoute: '/test',
       routes: {
+        '/test': (context) => EnvTest(),
         '/': (context) => Login(),
         '/home' : (context) => Home(),
         '/home/packageRemettre' : (context) => PackageRemettre(),

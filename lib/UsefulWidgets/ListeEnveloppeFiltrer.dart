@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:navette_application/Service/Services.dart';
 
 class ListeEnveloppeFiltrer extends StatefulWidget {
-  final List liste;
 
+
+  final List liste;
   ListeEnveloppeFiltrer({this.liste});
 
   @override
+
+
   _ListeEnveloppeFiltrerState createState() => _ListeEnveloppeFiltrerState();
+
 }
 
 class _ListeEnveloppeFiltrerState extends State<ListeEnveloppeFiltrer> {
   @override
+
   Widget build(BuildContext context) {
     return ListView(
       padding: EdgeInsets.only(bottom: 60),
@@ -48,7 +54,16 @@ class _ListeEnveloppeFiltrerState extends State<ListeEnveloppeFiltrer> {
                 ),
               ),
               title: Text('ID: ' + widget.liste[index].id),
-              subtitle: Text(widget.liste[index].montant+ ' Da'),
+              subtitle: Padding(
+                padding: const EdgeInsets.only(right:30.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(widget.liste[index].montant+ ' Da'),
+                    //Text(' '+hubName(widget.liste[index].hubArrive)  ),
+                  ],
+                ),
+              ),
               trailing:
                   /*(selectingmode)
                                                     ? */

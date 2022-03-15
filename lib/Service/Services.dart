@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:data_connection_checker/data_connection_checker.dart';
+import 'package:navette_application/Globals/globals.dart';
 import 'package:navette_application/Service/Enveloppe.dart';
 import 'package:navette_application/Service/Package.dart';
 import 'Hub.dart';
@@ -9,16 +10,22 @@ import 'dart:convert';
 import 'User.dart';
 
 class Services {
-  static const String nomServeur = '51.91.56.9:2021';
+  // devServeur = '51.91.56.9:2021' ;
+  // preprodServeur = 'pre-prod.easy-relay.com' ;
+  // prodServeur = 'bo.easy-relay.com' ;
+   
+  static  String nomServeur = GlobalVarsSingleton().env ;
+  static String nomMob = GlobalVarsSingleton().mob;
 //pour recuperation des user donnée -Login
   static Future<User> userLogin(String email, String mdp) async {
-    String url = "http://$nomServeur/api/mob2/api.php?action=login";
+    String url = "http://$nomServeur/api/$nomMob/api.php?action=login";
 
     try {
       final reponse =
           await get(url, headers: <String, String>{"email": email, "mdp": mdp});
       if (reponse.statusCode == 200) {
         final reponseJson = jsonDecode(reponse.body);
+        print(reponseJson);
         if (reponseJson.containsKey("error")) {
           return User(id: "-1"); //user n'existe pas
         }
@@ -27,6 +34,7 @@ class Services {
         throw Exception("Error");
       }
     } catch (e) {
+      print(e);
       return User(id: "-2"); //erreur dans le serveur pendant login user
     }
   }
@@ -58,7 +66,7 @@ class Services {
 /*
   static Future<List<Navette>> getNavettes() async {
     try {
-      final response = await http.get(url);
+      final response = await https.get(url);
       if (response.statusCode == 200) {
         List<Navette> list = parseNavette(response.body);
         return list;
@@ -75,7 +83,7 @@ class Services {
     return parsed.map<Navette>((json) => Navette.fromJson(json)).toList();
   }
 
-  */
+
 
 //  la liste des hubs
   static List<Hub> getListHubs() {
@@ -87,17 +95,39 @@ class Services {
       Hub(id: '16', nomVille: 'Anaba'),
     ];
   }
-
-  static Future<List<Package>> getPacakgeARemettre(
+*/
+  static Future<List<Hub>> getListHubs(
       String email, String mdp) async {
     try {
       String url =
-          "http://$nomServeur/api/mob2/api.php?action=navettes_EN_COURS";
+          "http://$nomServeur/api/$nomMob/api.php?action=list_hub";
       final response = await get(url, headers: <String, String>{
         'email': email,
         'mdp': mdp,
       });
       if (response.statusCode == 200) {
+        List<Hub> list = parseHub(response.body);
+        return list;
+      } else {
+        throw Exception("Error");
+      }
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static Future<List<Package>> getPacakgeARemettre(
+      String email, String mdp) async {
+    try {
+      String url =
+          "http://$nomServeur/api/$nomMob/api.php?action=navettes_EN_COURS";
+      final response = await get(url, headers: <String, String>{
+        'email': email,
+        'mdp': mdp,
+      });
+      if (response.statusCode == 200) {
+        
+        print(response.body) ;
         List<Package> list = parsePackage(response.body);
         return list;
       } else {
@@ -112,12 +142,13 @@ class Services {
       String email, String mdp) async {
     try {
       String url =
-          "http://$nomServeur/api/mob2/api.php?action=navettes_EN_ATTENTE";
+          "http://$nomServeur/api/$nomMob/api.php?action=navettes_EN_ATTENTE";
       final response = await get(url, headers: <String, String>{
         'email': email,
         'mdp': mdp,
       });
       if (response.statusCode == 200) {
+        
         List<Package> list = parsePackage(response.body);
         return list;
       } else {
@@ -137,7 +168,7 @@ class Services {
         'Content-Type': 'application/json'
       };
       var request = Request('GET',
-          Uri.parse('http://$nomServeur/api/mob2/api.php?action=return'));
+          Uri.parse('http://$nomServeur/api/$nomMob/api.php?action=return'));
       request.body = '''[$ids]''';
       request.headers.addAll(headers);
 
@@ -162,7 +193,7 @@ class Services {
         'Content-Type': 'application/json'
       };
       var request = Request('GET',
-          Uri.parse('http://$nomServeur/api/mob2/api.php?action=departure'));
+          Uri.parse('http://$nomServeur/api/$nomMob/api.php?action=departure'));
       request.body = '''[$ids]''';
       request.headers.addAll(headers);
 
@@ -208,15 +239,15 @@ class Services {
       String emailreceveur,
       String ids}) async {
     String url =
-        "http://$nomServeur/api/mob2/api.php?action=codeTransfertCaisse&moyen=sms";
+        "http://$nomServeur/api/$nomMob/api.php?action=codeTransfertCaisse&moyen=$moyen";
 
+    print(emailreceveur +" "+tel+" "+email+mdp);
     var headers = {
       'email': email, //'bilel@er.com'
       'mdp':mdp , //'0597'
-      'tel': '0790479950', //tel
-      'emailreceveur': 'nada.g@easy-relay.com' //emailreceveur
+      'tel': tel, //'0790479950'
+      'emailreceveur': emailreceveur //'nada.g@easy-relay.com'
     };
-    print(ids);
     try {
       var request = MultipartRequest('POST', Uri.parse(url));
       request.fields.addAll({'ids': ids /*'13,14' */});
@@ -244,14 +275,13 @@ class Services {
   static Future<bool> confirmeCode(
       {String email, String mdp, String codeconfirmation, String ids}) async {
     String url =
-        "http://$nomServeur/api/mob2/api.php?action=confirmertransfertcaisse";
+        "http://$nomServeur/api/$nomMob/api.php?action=confirmertransfertcaisse";
 
     var headers = {
       'email': email, //'bilel@er.com'
       'mdp': mdp, //'0597'
       'codeconfirmation': codeconfirmation,
     };
-    print(ids);
     try {
       var request = MultipartRequest('POST', Uri.parse(url));
       request.fields.addAll({'ids': ids /*'13,14'*/});
@@ -279,13 +309,13 @@ class Services {
   static Future<List<Enveloppe>> getEnveloppeARemettre(
       String email, String mdp, String id) async {
     String url =
-        "http://$nomServeur/api/mob2/api.php?action=getTransfertNavette";
+        "http://$nomServeur/api/$nomMob/api.php?action=getTransfertNavette";
     try {
       var headers = {
         'email': email, //'bilel@er.com'
         'mdp': mdp, //'0597'
         'etat': '3',
-        'acteur': '385494' //id
+        'acteur': id , //385494
       };
       var request = Request('GET', Uri.parse(url));
 
@@ -295,6 +325,7 @@ class Services {
 
       if (response.statusCode == 200) {
         String sResponse = await response.stream.bytesToString();
+        print(sResponse);
         List<Enveloppe> list = parseEnveloppe(sResponse);
         return list;
       } else {
@@ -308,13 +339,13 @@ class Services {
   static Future<List<Enveloppe>> getEnveloppeARecuperer(
       String email, String mdp, String id) async {
     String url =
-        "http://$nomServeur/api/mob2/api.php?action=getTransfertNavette";
+        "http://$nomServeur/api/$nomMob/api.php?action=getTransfertNavette";
     try {
       var headers = {
         'email': email, //'bilel@er.com'
         'mdp':mdp , //'0597'
         'etat': '1',
-        'acteur': '385494' //id
+        'acteur': id, //'385494'
       };
       var request = Request('GET', Uri.parse(url));
 
@@ -338,18 +369,22 @@ class Services {
     final parsed = json.decode(responseBody).cast<Map<String, dynamic>>();
     return parsed.map<Enveloppe>((json) => Enveloppe.fromJson(json)).toList();
   }
+  static List<Hub> parseHub(String responseBody) {
+    final parsed = json.decode(responseBody).cast<Map<String, dynamic>>();
+    return parsed.map<Hub>((json) => Hub.fromJson(json)).toList();
+  }
 
   static Future<String> setStateEnveloppe(
       String email, String mdp, String ids, String id) async {
     String url =
-        "http://$nomServeur/api/mob2/api.php?action=setTransfertActeurEtat";
+        "http://$nomServeur/api/$nomMob/api.php?action=setTransfertActeurEtat";
     try {
       var headers = {
         'email': email,//'bilel@er.com'
         'mdp':mdp ,//'0597'
         'id': ids,//ids
         'etat': '3',//state
-        'acteur': '385494'//id
+        'acteur':id //'385494'
       };
       var request = Request('GET', Uri.parse(url));
 
@@ -365,4 +400,8 @@ class Services {
       return "Serveur Planté";
     }
   }
+
+
+
+
 }

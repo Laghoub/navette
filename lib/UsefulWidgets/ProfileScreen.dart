@@ -46,8 +46,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 10.0),
                   child: Column(
                     children: [
-                      Text(ProfileScreen.isMdpObscure?
-                        'Email : ${widget.email}\n\nMot de Passe : ${widget.mdp.replaceAll(new RegExp(r'[1-9a-zA-Z]'), "-")}': 'Email : ${widget.email}\n\nMot de Passe : ${widget.mdp}',
+                      Text(ProfileScreen.isMdpObscure?/*r'[0-9a-zA-Z]'*/
+                        'Email : ${widget.email}\n\nMot de Passe : ${widget.mdp.replaceAll(new RegExp(".?"), "-")}': 'Email : ${widget.email}\n\nMot de Passe : ${widget.mdp}',
                         style: TextStyle(
                           color: Colors.grey[900],
                           fontSize: 17.0,

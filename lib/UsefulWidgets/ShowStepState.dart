@@ -22,7 +22,11 @@ static Color nonValide = Colors.red.withOpacity(0.8);
         children: [
           CircleAvatar(
             backgroundColor:state==1?encour: valide,
-            child : Stack
+            child : Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Image.asset("assets/Caisse - Récupération.png",
+              semanticLabel :"Caisse récupération",
+              )), /*Stack
             (children : [
               Icon(Icons.money, color: Colors.white,) ,
               Positioned(
@@ -30,7 +34,7 @@ static Color nonValide = Colors.red.withOpacity(0.8);
                 child : Icon(Icons.arrow_drop_up, color: Colors.white,size: 35,) 
               )
               ], 
-            ),
+            ),*/
           ),
           Container(
             width: 40,
@@ -39,7 +43,11 @@ static Color nonValide = Colors.red.withOpacity(0.8);
           ),
            CircleAvatar(
             backgroundColor:state==1?enattente:state==2? encour: valide ,
-            child : Stack
+            child : Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Image.asset("assets/Caisse - Remise.png",
+              semanticLabel :"Caisse Remise",
+              )),/* Stack
             (children : [
               Icon(Icons.money, color: Colors.white,) ,
               Positioned(
@@ -47,7 +55,7 @@ static Color nonValide = Colors.red.withOpacity(0.8);
                 child : Icon(Icons.arrow_drop_down, color: Colors.white,size: 35) 
               )
               ], 
-            ),
+            ),*/
           ),
           Container(
             width: 40,
@@ -56,7 +64,11 @@ static Color nonValide = Colors.red.withOpacity(0.8);
           ),
           CircleAvatar(
             backgroundColor: state==3?encour:state<3? enattente: valide,
-            child : Icon(Icons.local_shipping_outlined, color: Colors.white,),
+            child : Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: Image.asset("assets/Navette Remise.png",
+              semanticLabel :"Navette Remise",
+              )),//Icon(Icons.local_shipping_outlined, color: Colors.white,),
           ),
           Container(
             width: 40,
@@ -65,7 +77,12 @@ static Color nonValide = Colors.red.withOpacity(0.8);
           ),
           CircleAvatar(
             backgroundColor: state==4?encour: state <4? enattente : valide,
-            child : Icon(Icons.local_shipping_rounded, color: Colors.white,),
+            child : Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: Image.asset("assets/Navette Récupération.png",
+              semanticLabel :"Navette récuperation",
+              ),
+            ),//Icon(Icons.local_shipping_rounded, color: Colors.white,),
           ),
         
         ],

@@ -24,7 +24,7 @@ class _EnveloppeRecupererState extends State<EnveloppeRecuperer> {
   String validationMessage = "";
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  final List<Hub> listHubs = Services.getListHubs();
+  //final List<Hub> listHubs = Services.getListHubs(email,mdp);
 
   String email;
   String mdp;
@@ -32,11 +32,15 @@ class _EnveloppeRecupererState extends State<EnveloppeRecuperer> {
 
   List<Enveloppe> enveloppesRecupererList = [];
   List<Enveloppe> filteredEnveloppesRecupererList;
+  List<Hub> listHubs = [];
 
   void initState() {
     super.initState();
 
     filteredEnveloppesRecupererList = enveloppesRecupererList;
+  }
+  String hubName(String id){
+    return listHubs.firstWhere((element) => element.id.compareTo(id)==0).name;
   }
 
   @override
@@ -45,10 +49,18 @@ class _EnveloppeRecupererState extends State<EnveloppeRecuperer> {
     email = data['email'] as String;
     user = data['user'] as User;
     mdp = data['mdp'] as String;
+    Services.getListHubs(email, mdp).then((value){
+      setState(() {
+        if (value != null) {
+          listHubs = value;
+        }
+      });
+    });
     if (validationState == -1)
       Services.getEnveloppeARecuperer(email, mdp, user.id).then((value) {
         setState(() {
           if (value != null) {
+
             enveloppesRecupererList = value;
             filteredEnveloppesRecupererList = enveloppesRecupererList;
             validationState = 0;
@@ -90,7 +102,7 @@ class _EnveloppeRecupererState extends State<EnveloppeRecuperer> {
         key: _scaffoldKey,
         /*Barre de Top contient un titre et bouton de filtrage */
         appBar: AppBar(
-          brightness: Brightness.light,
+          brightness: Brightness.dark,
           backgroundColor: Colors.purple[900],
           title: Text("Récuperer les enveloppes"),
           centerTitle: true,
@@ -205,46 +217,57 @@ class _EnveloppeRecupererState extends State<EnveloppeRecuperer> {
           ],
         ),
         floatingActionButton: MaterialButton(
-          onPressed: () async {
-            //var connected = await Services.isConnected();
-            if (Home.connected) {
-              _scaffoldKey.currentState.removeCurrentSnackBar();
-              var nonSelectione = nbNonSelectionne();
-              setState(() {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return StatefulBuilder(builder: (context, setState) {
-                      return WillPopScope(
-                        onWillPop: () => Future.value(false),
-                        child: AlertDialog(
-                          title: Text("Confirmation"),
-                          content: validationState == 0
-                              ? Text.rich(TextSpan(children: [
-                                  TextSpan(
-                                      text:
-                                          'Vous confirmez la recupération de(s) '),
-                                  TextSpan(
-                                      text:
-                                          '${filteredEnveloppesRecupererList.length - nonSelectione}',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      )),
-                                  TextSpan(text: ' enveloppe(s) !'),
-                                ]))
-                              : validationState == 1
-                                  ? CircularProgressIndicator(
-                                      strokeWidth: 2.0,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                          Colors.blue))
-                                  : validationState == 2
-                                      ? Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            CircleAvatar(
-                                              backgroundColor:
-                                                  ShowStepState.valide,
-                                              child: Stack(
+          onPressed: validationState == -1? null :
+           enveloppesRecupererList.length != 0
+              ? () async {
+                  //var connected = await Services.isConnected();
+                  if (Home.connected) {
+                    _scaffoldKey.currentState.removeCurrentSnackBar();
+                    var nonSelectione = nbNonSelectionne();
+                    setState(() {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return StatefulBuilder(builder: (context, setState) {
+                            return WillPopScope(
+                              onWillPop: () => Future.value(false),
+                              child: AlertDialog(
+                                title: Text("Confirmation"),
+                                content: validationState == 0
+                                    ? Text.rich(TextSpan(children: [
+                                        TextSpan(
+                                            text:
+                                                'Vous confirmez la recupération de(s) '),
+                                        TextSpan(
+                                            text:
+                                                '${filteredEnveloppesRecupererList.length - nonSelectione}',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                            )),
+                                        TextSpan(text: ' enveloppe(s) !'),
+                                      ]))
+                                    : validationState == 1
+                                        ? CircularProgressIndicator(
+                                            strokeWidth: 2.0,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                    Colors.blue))
+                                        : validationState == 2
+                                            ? Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  CircleAvatar(
+                                                    backgroundColor:
+                                                        ShowStepState.valide,
+                                                    child: Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(8.0),
+                                                        child: Image.asset(
+                                                          "assets/Caisse - Récupération.png",
+                                                          semanticLabel:
+                                                              "Caisse récupération",
+                                                        )), /*Stack(
                                                 children: [
                                                   Icon(
                                                     Icons.money,
@@ -258,37 +281,46 @@ class _EnveloppeRecupererState extends State<EnveloppeRecuperer> {
                                                               .white,
                                                           size: 35))
                                                 ],
-                                              ),
-                                            ),
-                                            SizedBox(height: 10),
-                                            Text.rich(
-                                              TextSpan(children: [
-                                                TextSpan(
-                                                    text:
-                                                        "Enveloppes à recuperer\n",
-                                                    style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                    )),
-                                                TextSpan(
-                                                    text: "Etape Terminée",
-                                                    style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                      color: Colors.green,
-                                                    ))
-                                              ]),
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          ],
-                                        )
-                                      : Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            CircleAvatar(
-                                              backgroundColor:
-                                                  ShowStepState.nonValide,
-                                              child: Stack(
+                                              ),*/
+                                                  ),
+                                                  SizedBox(height: 10),
+                                                  Text.rich(
+                                                    TextSpan(children: [
+                                                      TextSpan(
+                                                          text:
+                                                              "Enveloppes à recuperer\n",
+                                                          style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                          )),
+                                                      TextSpan(
+                                                          text:
+                                                              "Etape Terminée",
+                                                          style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                            color: Colors.green,
+                                                          ))
+                                                    ]),
+                                                    textAlign: TextAlign.center,
+                                                  ),
+                                                ],
+                                              )
+                                            : Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  CircleAvatar(
+                                                    backgroundColor:
+                                                        ShowStepState.nonValide,
+                                                    child: Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(8.0),
+                                                        child: Image.asset(
+                                                          "assets/Caisse - Récupération.png",
+                                                          semanticLabel:
+                                                              "Caisse récupération",
+                                                        )), /*Stack(
                                                 children: [
                                                   Icon(
                                                     Icons.money,
@@ -298,123 +330,130 @@ class _EnveloppeRecupererState extends State<EnveloppeRecuperer> {
                                                       top: 2.0,
                                                       child: Icon(
                                                           Icons.arrow_drop_down,
-                                                          color: Colors
-                                                              .white,
+                                                          color: Colors.white,
                                                           size: 35))
                                                 ],
+                                              ),*/
+                                                  ),
+                                                  SizedBox(height: 10),
+                                                  Text.rich(
+                                                    TextSpan(children: [
+                                                      TextSpan(
+                                                          text:
+                                                              "Enveloppe à récuperer\n",
+                                                          style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                          )),
+                                                      TextSpan(
+                                                          text:
+                                                              "Etape Echouée\n",
+                                                          style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                            color: Colors.red,
+                                                          )),
+                                                      TextSpan(
+                                                          text: "Motif : " +
+                                                              validationMessage,
+                                                          style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.w300,
+                                                            color: Colors
+                                                                .grey[800],
+                                                          ))
+                                                    ]),
+                                                    textAlign: TextAlign.center,
+                                                  ),
+                                                ],
                                               ),
-                                            ),
-                                            SizedBox(height: 10),
-                                            Text.rich(
-                                              TextSpan(children: [
-                                                TextSpan(
-                                                    text:
-                                                        "Enveloppe à récuperer\n",
-                                                    style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                    )),
-                                                TextSpan(
-                                                    text: "Etape Echouée\n",
-                                                    style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                      color: Colors.red,
-                                                    )),
-                                                TextSpan(
-                                                    text: "Motif : " +
-                                                        validationMessage,
-                                                    style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w300,
-                                                      color: Colors.grey[800],
-                                                    ))
-                                              ]),
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          ],
-                                        ),
-                          actions: [
-                            FlatButton(
-                              child: Text("Annuler"),
-                              onPressed: validationState == 0
-                                  ? () {
-                                      Navigator.of(context).pop();
-                                    }
-                                  : null,
-                            ),
-                            FlatButton(
-                              child: Text("Continuer"),
-                              onPressed: validationState == 0
-                                  ? () async {
-                                      setState(() {
-                                        validationState = 1;
-                                      });
-                                      if (filteredEnveloppesRecupererList
-                                                  .length -
-                                              nonSelectione !=
-                                          0) {
-                                        validationMessage =
-                                            await Services.setStateEnveloppe(
-                                                email,
-                                                mdp,
-                                                idEnveloppesRecuperer(),
-                                                user.id);
-
-                                        setState(() {
-                                          print(validationMessage);
-                                          if (validationMessage
-                                                  .compareTo("true") ==
-                                              0)
-                                            validationState = 2;
-                                          else
-                                            validationState = 3;
-                                        });
-                                        attente.run(() {
-                                          Navigator.of(context).pop();
-                                          if (validationMessage
-                                                  .compareTo("true") ==
-                                              0)
-                                            Navigator.pushReplacementNamed(
-                                                context,
-                                                '/home/packageRemettre',
-                                                arguments: {
-                                                  'user': user,
-                                                  'email': email,
-                                                  'mdp': mdp
-                                                });
-                                          else
+                                actions: [
+                                  FlatButton(
+                                    child: Text("Annuler"),
+                                    onPressed: validationState == 0
+                                        ? () {
+                                            Navigator.of(context).pop();
+                                          }
+                                        : null,
+                                  ),
+                                  FlatButton(
+                                    child: Text("Continuer"),
+                                    onPressed: validationState == 0
+                                        ? () async {
                                             setState(() {
-                                              validationState = 0;
+                                              validationState = 1;
                                             });
-                                        });
-                                      } else {
-                                        Navigator.of(context).pop();
-                                        Navigator.pushReplacementNamed(
-                                            context, '/home/packageRemettre',
-                                            arguments: {
-                                              'user': user,
-                                              'email': email,
-                                              'mdp': mdp
-                                            });
-                                      }
-                                    }
-                                  : null,
-                            ),
-                          ],
-                        ),
+                                            if (filteredEnveloppesRecupererList
+                                                        .length -
+                                                    nonSelectione !=
+                                                0) {
+                                              validationMessage = await Services
+                                                  .setStateEnveloppe(
+                                                      email,
+                                                      mdp,
+                                                      idEnveloppesRecuperer(),
+                                                      user.id);
+
+                                              setState(() {
+                                                print(validationMessage);
+                                                if (validationMessage
+                                                        .compareTo("true") ==
+                                                    0)
+                                                  validationState = 2;
+                                                else
+                                                  validationState = 3;
+                                              });
+                                              attente.run(() {
+                                                Navigator.of(context).pop();
+                                                if (validationMessage
+                                                        .compareTo("true") ==
+                                                    0)
+                                                  Navigator.pushReplacementNamed(
+                                                      context,
+                                                      '/home/packageRemettre',
+                                                      arguments: {
+                                                        'user': user,
+                                                        'email': email,
+                                                        'mdp': mdp
+                                                      });
+                                                else
+                                                  setState(() {
+                                                    validationState = 0;
+                                                  });
+                                              });
+                                            } else {
+                                              Navigator.of(context).pop();
+                                              Navigator.pushReplacementNamed(
+                                                  context,
+                                                  '/home/packageRemettre',
+                                                  arguments: {
+                                                    'user': user,
+                                                    'email': email,
+                                                    'mdp': mdp
+                                                  });
+                                            }
+                                          }
+                                        : null,
+                                  ),
+                                ],
+                              ),
+                            );
+                          });
+                        },
                       );
                     });
-                  },
-                );
-              });
-            } else {
-              _scaffoldKey.currentState.removeCurrentSnackBar();
-              Services.showNoConnectionSnackBar(_scaffoldKey);
-            }
-          },
+                  } else {
+                    _scaffoldKey.currentState.removeCurrentSnackBar();
+                    Services.showNoConnectionSnackBar(_scaffoldKey);
+                  }
+                }
+              : () {
+                  Navigator.pushReplacementNamed(
+                      context, '/home/packageRemettre',
+                      arguments: {'user': user, 'email': email, 'mdp': mdp});
+                },
           child: Text(
-            "Confirmer",
+            enveloppesRecupererList.length != 0 ? "Confirmer" : "Continuer",
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w300,

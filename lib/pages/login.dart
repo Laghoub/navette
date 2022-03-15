@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:navette_application/Service/Services.dart';
 import '../Animation/FadeAnimation.dart';
 import '../Service/User.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Login extends StatefulWidget {
   @override
@@ -17,6 +18,24 @@ class _LoginState extends State<Login> {
 
   int _stateLogin = 0;
   bool connexionEchouee = false;
+
+  @override
+  void initState() {
+    super.initState();
+    remplirMail();
+  }
+
+  void remplirMail() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String usermail = prefs.getString('mail');
+
+    if (usermail != null) {
+      setState(() {
+        emailController.text = usermail;
+      });
+      return;
+    }
+  }
 
   @override
   void dispose() {
@@ -224,6 +243,12 @@ class _LoginState extends State<Login> {
                                                       'email': email,
                                                       'mdp': mdp
                                                     });
+                                                //store  the mail adresse
+                                                final SharedPreferences prefs =
+                                                    await SharedPreferences
+                                                        .getInstance();
+                                                prefs.setString('mail',
+                                                    emailController.text);
                                               } else {
                                                 if ((user.id == '-1')) {
                                                   setState(() {
@@ -259,30 +284,29 @@ class _LoginState extends State<Login> {
                                                   _stateLogin = 0;
                                                 }
                                               }
-                                            }else {
-                                            await showDialog(
-                                              context: context,
-                                              builder: (ctx) => AlertDialog(
-                                                title: Text("Connexion"),
-                                                content: Text(
-                                                    "Veuillez vous verifier votre connexion internet"),
-                                                actions: <Widget>[
-                                                  FlatButton(
-                                                    onPressed: () {
-                                                      setState(() {
-                                                        _stateLogin = 0;
-                                                      });
-                                                      Navigator.of(ctx).pop();
-                                                    },
-                                                    child: Text("D'accord"),
-                                                  ),
-                                                ],
-                                              ),
-                                            );
-                                            _stateLogin = 0;
+                                            } else {
+                                              await showDialog(
+                                                context: context,
+                                                builder: (ctx) => AlertDialog(
+                                                  title: Text("Connexion"),
+                                                  content: Text(
+                                                      "Veuillez vous verifier votre connexion internet"),
+                                                  actions: <Widget>[
+                                                    FlatButton(
+                                                      onPressed: () {
+                                                        setState(() {
+                                                          _stateLogin = 0;
+                                                        });
+                                                        Navigator.of(ctx).pop();
+                                                      },
+                                                      child: Text("D'accord"),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                              _stateLogin = 0;
+                                            }
                                           }
-                                          } 
-                                          
                                         }),
                             ),
                           ),
