@@ -14,11 +14,11 @@ class Services {
   // preprodServeur = 'pre-prod.easy-relay.com' ;
   // prodServeur = 'bo.easy-relay.com' ;
    
-  static  String nomServeur = GlobalVarsSingleton().env ;
-  static String nomMob = GlobalVarsSingleton().mob;
+  static  String nomServeur = 'bo.easy-relay.com' ;
+  static String nomMob = 'mob2';
 //pour recuperation des user donnée -Login
   static Future<User> userLogin(String email, String mdp) async {
-    String url = "http://$nomServeur/api/$nomMob/api.php?action=login";
+    String url = "https://$nomServeur/api/$nomMob/api.php?action=login";
 
     try {
       final reponse =
@@ -100,7 +100,7 @@ class Services {
       String email, String mdp) async {
     try {
       String url =
-          "http://$nomServeur/api/$nomMob/api.php?action=list_hub";
+          "https://$nomServeur/api/$nomMob/api.php?action=list_hub";
       final response = await get(url, headers: <String, String>{
         'email': email,
         'mdp': mdp,
@@ -120,7 +120,7 @@ class Services {
       String email, String mdp) async {
     try {
       String url =
-          "http://$nomServeur/api/$nomMob/api.php?action=navettes_EN_COURS";
+          "https://$nomServeur/api/$nomMob/api.php?action=navettes_EN_COURS";
       final response = await get(url, headers: <String, String>{
         'email': email,
         'mdp': mdp,
@@ -142,7 +142,7 @@ class Services {
       String email, String mdp) async {
     try {
       String url =
-          "http://$nomServeur/api/$nomMob/api.php?action=navettes_EN_ATTENTE";
+          "https://$nomServeur/api/$nomMob/api.php?action=navettes_EN_ATTENTE";
       final response = await get(url, headers: <String, String>{
         'email': email,
         'mdp': mdp,
@@ -168,7 +168,7 @@ class Services {
         'Content-Type': 'application/json'
       };
       var request = Request('GET',
-          Uri.parse('http://$nomServeur/api/$nomMob/api.php?action=return'));
+          Uri.parse('https://$nomServeur/api/$nomMob/api.php?action=return'));
       request.body = '''[$ids]''';
       request.headers.addAll(headers);
 
@@ -193,7 +193,7 @@ class Services {
         'Content-Type': 'application/json'
       };
       var request = Request('GET',
-          Uri.parse('http://$nomServeur/api/$nomMob/api.php?action=departure'));
+          Uri.parse('https://$nomServeur/api/$nomMob/api.php?action=departure'));
       request.body = '''[$ids]''';
       request.headers.addAll(headers);
 
@@ -239,7 +239,7 @@ class Services {
       String emailreceveur,
       String ids}) async {
     String url =
-        "http://$nomServeur/api/$nomMob/api.php?action=codeTransfertCaisse&moyen=$moyen";
+        "https://$nomServeur/api/$nomMob/api.php?action=codeTransfertCaisse&moyen=$moyen";
 
     print(emailreceveur +" "+tel+" "+email+mdp);
     var headers = {
@@ -275,7 +275,7 @@ class Services {
   static Future<bool> confirmeCode(
       {String email, String mdp, String codeconfirmation, String ids}) async {
     String url =
-        "http://$nomServeur/api/$nomMob/api.php?action=confirmertransfertcaisse";
+        "https://$nomServeur/api/$nomMob/api.php?action=confirmertransfertcaisse";
 
     var headers = {
       'email': email, //'bilel@er.com'
@@ -309,7 +309,7 @@ class Services {
   static Future<List<Enveloppe>> getEnveloppeARemettre(
       String email, String mdp, String id) async {
     String url =
-        "http://$nomServeur/api/$nomMob/api.php?action=getTransfertNavette";
+        "https://$nomServeur/api/$nomMob/api.php?action=getTransfertNavette";
     try {
       var headers = {
         'email': email, //'bilel@er.com'
@@ -339,7 +339,7 @@ class Services {
   static Future<List<Enveloppe>> getEnveloppeARecuperer(
       String email, String mdp, String id) async {
     String url =
-        "http://$nomServeur/api/$nomMob/api.php?action=getTransfertNavette";
+        "https://$nomServeur/api/$nomMob/api.php?action=getTransfertNavette";
     try {
       var headers = {
         'email': email, //'bilel@er.com'
@@ -377,7 +377,7 @@ class Services {
   static Future<String> setStateEnveloppe(
       String email, String mdp, String ids, String id) async {
     String url =
-        "http://$nomServeur/api/$nomMob/api.php?action=setTransfertActeurEtat";
+        "https://$nomServeur/api/$nomMob/api.php?action=setTransfertActeurEtat";
     try {
       var headers = {
         'email': email,//'bilel@er.com'
